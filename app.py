@@ -4,7 +4,7 @@ from your_camel_script_module import run_camel_script
 # Define the Streamlit app
 def main():
     st.title("LangChain CAMEL Script")
-    st.markdown("This is an alternative langchain implementation of paper: “CAMEL: Communicative Agents for “Mind” Exploration of Large Scale Language Model Society”. The rapid advancement of conversational and chat-based language models has led to remarkable progress in complex task-solving. However, their success heavily relies on human input to guide the conversation, which can be challenging and time-consuming. This tool allows for the rapid exploration of multi-agent cooperative simulations.")
+    st.markdown("This is an alternative langchain implementation of paper: “CAMEL: Communicative Agents for “Mind” Exploration of Large Scale Language Model Society”. The rapid advancement of conversational and chat-based language models has led to remarkable progress in complex task-solving. However, their success heavily relies on human input to guide the conversation, which can be challenging and time-consuming. This tool allows for the rapid exploration of multi-agent cooperative simulations. ...All credit to the original authors. This is simply an alternative implementation of their work")
 
     # Collect user inputs
     user = st.text_input("Main Agent:")
