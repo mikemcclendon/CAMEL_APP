@@ -3,6 +3,9 @@
 #Project website: https://www.camel-ai.org/
 #Arxiv paper: https://arxiv.org/abs/2303.17760'
 
+import streamlit as st
+import sys
+import openai
 from typing import List
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (
@@ -15,6 +18,9 @@ from langchain.schema import (
     SystemMessage,
     BaseMessage,
 )
+sys.stdout = st
+    
+
 
 class CAMELAgent:
     def __init__(
@@ -66,7 +72,7 @@ def run_camel_script(assistant: str, user: str, task: str, openai_key: str):
                                                                   user_role_name=user_role_name,
                                                                   task=task, word_limit=word_limit)[0]
     specified_task_msg = task_specify_agent.step(task_specifier_msg)
-    print(f"Specified task: {specified_task_msg.content}")
+    st.write(f"<b>Specified task: </b>{specified_task_msg.content}", unsafe_allow_html=True)
     specified_task = specified_task_msg.content
 
     assistant_inception_prompt = (
@@ -78,7 +84,7 @@ def run_camel_script(assistant: str, user: str, task: str, openai_key: str):
 
     I must give you one instruction at a time.
     You must write a specific solution that appropriately completes the requested instruction.
-    You must decline my instruction honestly if you cannot perform the instruction due to physical, moral, legal reasons or your capability and explain the reasons.
+    You must decline my instruction honestly if you cannot perform the instruction due to physical reasons or your capability and explain the reasons.
     Do not add anything else other than your solution to my instruction.
     You are never supposed to ask me any questions you only answer questions.
     You are never supposed to reply with a flake solution. Explain your solutions.
@@ -109,7 +115,7 @@ def run_camel_script(assistant: str, user: str, task: str, openai_key: str):
 
     You must give me one instruction at a time.
     I must write a response that appropriately completes the requested instruction.
-    I must decline your instruction honestly if I cannot perform the instruction due to physical, moral, legal reasons or my capability and explain the reasons.
+    I must decline your instruction honestly if I cannot perform the instruction due to physical reasons or my capability and I must explain the reasons.
     You should instruct me not ask me questions.
     Now you must start to instruct me using the two ways described above.
     Do not add anything else other than your instruction and the optional corresponding input!
@@ -148,23 +154,34 @@ def run_camel_script(assistant: str, user: str, task: str, openai_key: str):
 
     # In[8]:
 
-    print(f"Original task prompt:\n{task}\n")
-    print(f"Specified task prompt:\n{specified_task}\n")
-
-    chat_turn_limit, n = 10, 0
+    st.write(f"<b>Original task prompt:</b>\n{task}\n", unsafe_allow_html=True)
+    st.write(f"<b>Specified task prompt:</b>\n{specified_task}\n", unsafe_allow_html=True)
+    chat_turn_limit, n = 5, 0
+    output = ""
     while n < chat_turn_limit:
         n += 1
         user_ai_msg = user_agent.step(assistant_msg)
         user_msg = HumanMessage(content=user_ai_msg.content)
-        print(f"AI User ({user_role_name}):\n\n{user_msg.content}\n\n")
-        
+        user_msg.content = user_msg.content.replace("Input: None.", "").strip()  # Remove "Input: None."
+        st.write(f"<b>AI User ({user_role_name}):</b>\n\n{user_msg.content}\n\n", unsafe_allow_html=True)
+        output += f"AI User ({user_role_name}):\n\n{user_msg.content}\n\n"
+    
         assistant_ai_msg = assistant_agent.step(user_msg)
         assistant_msg = HumanMessage(content=assistant_ai_msg.content)
-        print(f"AI Assistant ({assistant_role_name}):\n\n{assistant_msg.content}\n\n")
+        assistant_content = assistant_msg.content
+        if "Input: None" in assistant_content:
+            assistant_content = assistant_content.split("Input: None")[0]
+        st.write(f"<b>AI Assistant ({assistant_role_name}):</b>\n\n{assistant_msg.content}\n\n", unsafe_allow_html=True)
+        output += f"AI Assistant ({assistant_role_name}):\n\n{assistant_msg.content}\n\n"
         if "<CAMEL_TASK_DONE>" in user_msg.content:
-            break
+            st.experimental_set_query_params(status="complete")
+            st.balloons()
+            st.stop()
 
-    output = ""
-    for msg in assistant_agent.stored_messages + user_agent.stored_messages:
-        output += f"{msg.type}: {msg.content}\n"
-    return output
+    st.write("<h2><b>Simulation complete!</b></h2>", 
+         unsafe_allow_html=True, 
+         )
+
+    st.balloons()
+
+
